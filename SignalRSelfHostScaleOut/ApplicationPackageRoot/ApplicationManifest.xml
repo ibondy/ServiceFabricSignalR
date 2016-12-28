@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="SignalRSelfHost" ApplicationTypeVersion="1.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+  <Parameters>
+    <Parameter Name="SignalRHost_InstanceCount" DefaultValue="-1" />
+    <Parameter Name="UseScaleout" DefaultValue="false" />
+    <Parameter Name="SFConnectionString" DefaultValue="" />
+  </Parameters>
+  <ServiceManifestImport>
+    <ServiceManifestRef ServiceManifestName="SignalRHostPkg" ServiceManifestVersion="1.0.0" />
+    <ConfigOverrides>
+      <ConfigOverride Name="Config">
+        <Settings>
+          <Section Name="SignalRScaleout">
+            <Parameter Name="UseScaleout" Value="[UseScaleout]" />
+            <Parameter Name="SFConnectionString" Value="[SFConnectionString]" />
+          </Section>
+        </Settings>
+      </ConfigOverride>
+    </ConfigOverrides>
+  </ServiceManifestImport>
+  <DefaultServices>
+    <Service Name="SignalRHost">
+      <StatelessService ServiceTypeName="SignalRHostType" InstanceCount="[SignalRHost_InstanceCount]">
+        <SingletonPartition />
+      </StatelessService>
+    </Service>
+  </DefaultServices>
+</ApplicationManifest>
