@@ -1,16 +1,21 @@
-﻿using Microsoft.AspNet.SignalR;
-using Newtonsoft.Json;
-using System.Threading.Tasks;
-
-namespace SignalRHost
+﻿namespace SignalRHost
 {
+    #region Using
+
+    using System.Threading.Tasks;
+    using Microsoft.AspNet.SignalR;
+    using Newtonsoft.Json;
+    using ScaleOut;
+
+    #endregion
+
     /// <summary>
-    /// Handles messages from Service Fabric and relays to SignalR clients
+    ///     Handles messages from Service Fabric and relays to SignalR clients
     /// </summary>
     public class InternalConnection : PersistentConnection
     {
-       /// <summary>
-        /// Receives message from SF and sends to SignalR client(s) 
+        /// <summary>
+        ///     Receives message from SF and sends to SignalR client(s)
         /// </summary>
         /// <param name="request"></param>
         /// <param name="connectionId"></param>
@@ -18,15 +23,11 @@ namespace SignalRHost
         /// <returns></returns>
         protected override async Task OnReceived(IRequest request, string connectionId, string data)
         {
-            var message = JsonConvert.DeserializeObject<ScaleOut.ScaleOutMessage>(data);
-            if(string.IsNullOrEmpty(message.ConnectionId))
-            {
-                await GlobalHost.ConnectionManager.GetConnectionContext<ExternalConnection>().Connection.Broadcast(data).ConfigureAwait(false);
-            }
+            var message = JsonConvert.DeserializeObject<ScaleOutMessage>(data);
+            if (string.IsNullOrEmpty(message.ConnectionId))
+                await GlobalHost.ConnectionManager.GetConnectionContext<ExternalConnection>().Connection.Broadcast(message.Payload).ConfigureAwait(false);
             else
-            {
-               await GlobalHost.ConnectionManager.GetConnectionContext<ExternalConnection>().Connection.Send(connectionId, message.Payload).ConfigureAwait(false);
-            }
+                await GlobalHost.ConnectionManager.GetConnectionContext<ExternalConnection>().Connection.Send(message.ConnectionId, message.Payload).ConfigureAwait(false);
         }
     }
 }

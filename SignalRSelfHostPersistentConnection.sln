@@ -11,6 +11,16 @@ Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "SFScaleOut", "SFScaleOut\SF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleOut", "ScaleOut\ScaleOut.csproj", "{DC2A1494-B198-4A4C-ABC4-4565D33D1C26}"
 EndProject
+Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "EchoTestService", "EchoTestService\EchoTestService.sfproj", "{EF370071-373E-49FB-9E66-195F02A1ECD9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoService", "EchoService\EchoService.csproj", "{11B3B741-14FD-4797-B19A-F6079EB6F4F7}"
+EndProject
+Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "EchoTestActor", "EchoTestActor\EchoTestActor.sfproj", "{2DDD7FBD-B631-4CD6-AAC8-18AC6E6045E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoActor", "EchoActor\EchoActor.csproj", "{3A6FB9D8-7578-42B4-B453-B6A88E03213F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoActor.Interfaces", "EchoActor.Interfaces\EchoActor.Interfaces.csproj", "{674F72B4-1268-4BD3-802E-2BB2231A5942}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,6 +47,30 @@ Global
 		{DC2A1494-B198-4A4C-ABC4-4565D33D1C26}.Debug|x64.Build.0 = Debug|x64
 		{DC2A1494-B198-4A4C-ABC4-4565D33D1C26}.Release|x64.ActiveCfg = Release|x64
 		{DC2A1494-B198-4A4C-ABC4-4565D33D1C26}.Release|x64.Build.0 = Release|x64
+		{EF370071-373E-49FB-9E66-195F02A1ECD9}.Debug|x64.ActiveCfg = Debug|x64
+		{EF370071-373E-49FB-9E66-195F02A1ECD9}.Debug|x64.Build.0 = Debug|x64
+		{EF370071-373E-49FB-9E66-195F02A1ECD9}.Debug|x64.Deploy.0 = Debug|x64
+		{EF370071-373E-49FB-9E66-195F02A1ECD9}.Release|x64.ActiveCfg = Release|x64
+		{EF370071-373E-49FB-9E66-195F02A1ECD9}.Release|x64.Build.0 = Release|x64
+		{EF370071-373E-49FB-9E66-195F02A1ECD9}.Release|x64.Deploy.0 = Release|x64
+		{11B3B741-14FD-4797-B19A-F6079EB6F4F7}.Debug|x64.ActiveCfg = Debug|x64
+		{11B3B741-14FD-4797-B19A-F6079EB6F4F7}.Debug|x64.Build.0 = Debug|x64
+		{11B3B741-14FD-4797-B19A-F6079EB6F4F7}.Release|x64.ActiveCfg = Release|x64
+		{11B3B741-14FD-4797-B19A-F6079EB6F4F7}.Release|x64.Build.0 = Release|x64
+		{2DDD7FBD-B631-4CD6-AAC8-18AC6E6045E9}.Debug|x64.ActiveCfg = Debug|x64
+		{2DDD7FBD-B631-4CD6-AAC8-18AC6E6045E9}.Debug|x64.Build.0 = Debug|x64
+		{2DDD7FBD-B631-4CD6-AAC8-18AC6E6045E9}.Debug|x64.Deploy.0 = Debug|x64
+		{2DDD7FBD-B631-4CD6-AAC8-18AC6E6045E9}.Release|x64.ActiveCfg = Release|x64
+		{2DDD7FBD-B631-4CD6-AAC8-18AC6E6045E9}.Release|x64.Build.0 = Release|x64
+		{2DDD7FBD-B631-4CD6-AAC8-18AC6E6045E9}.Release|x64.Deploy.0 = Release|x64
+		{3A6FB9D8-7578-42B4-B453-B6A88E03213F}.Debug|x64.ActiveCfg = Debug|x64
+		{3A6FB9D8-7578-42B4-B453-B6A88E03213F}.Debug|x64.Build.0 = Debug|x64
+		{3A6FB9D8-7578-42B4-B453-B6A88E03213F}.Release|x64.ActiveCfg = Release|x64
+		{3A6FB9D8-7578-42B4-B453-B6A88E03213F}.Release|x64.Build.0 = Release|x64
+		{674F72B4-1268-4BD3-802E-2BB2231A5942}.Debug|x64.ActiveCfg = Debug|x64
+		{674F72B4-1268-4BD3-802E-2BB2231A5942}.Debug|x64.Build.0 = Debug|x64
+		{674F72B4-1268-4BD3-802E-2BB2231A5942}.Release|x64.ActiveCfg = Release|x64
+		{674F72B4-1268-4BD3-802E-2BB2231A5942}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

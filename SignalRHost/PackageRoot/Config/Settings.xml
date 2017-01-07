@@ -2,8 +2,7 @@
 <Settings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Section Name="SignalRScaleout">
     <Parameter Name="UseScaleout" Value="false" />
-    <Parameter Name="SFConnectionString" Value="" />
-    <Parameter Name="RedisAppName" Value="SignalRSelfHostScaleOut" />
-    <Parameter Name="EncryptionPassword" Value="wow, this is indeed a secure password!" />
-  </Section>
+    <Parameter Name="SFScaleoutConnectionString" Value="" />
+    <Parameter Name="UseActors" Value="true" />
+    </Section>
 </Settings>

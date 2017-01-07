@@ -1,25 +1,33 @@
-﻿using System;
-using System.Fabric;
-using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Owin.Hosting;
-using Microsoft.ServiceFabric.Services.Communication.Runtime;
-using Owin;
-
-namespace SignalRHost
+﻿namespace SignalRHost
 {
+    #region Using
+
+    using System;
+    using System.Fabric;
+    using System.Globalization;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Owin.Hosting;
+    using Microsoft.ServiceFabric.Services.Communication.Runtime;
+    using Owin;
+
+    #endregion
+
     internal class OwinCommunicationListener : ICommunicationListener
     {
-        private readonly ServiceEventSource eventSource;
-        private readonly Action<IAppBuilder> startup;
-        private readonly ServiceContext serviceContext;
-        private readonly string endpointName;
-        private readonly string appRoot;
+        #region
 
-        private IDisposable webApp;
-        private string publishAddress;
-        private string listeningAddress;
+        private readonly string _appRoot;
+        private readonly string _endpointName;
+        private readonly ServiceEventSource _eventSource;
+        private readonly ServiceContext _serviceContext;
+        private readonly Action<IAppBuilder> _startup;
+        private string _listeningAddress;
+        private string _publishAddress;
+
+        private IDisposable _webApp;
+
+        #endregion
 
         public OwinCommunicationListener(Action<IAppBuilder> startup, ServiceContext serviceContext, ServiceEventSource eventSource, string endpointName)
             : this(startup, serviceContext, eventSource, endpointName, null)
@@ -29,86 +37,82 @@ namespace SignalRHost
         public OwinCommunicationListener(Action<IAppBuilder> startup, ServiceContext serviceContext, ServiceEventSource eventSource, string endpointName, string appRoot)
         {
             if (startup == null)
-            {
                 throw new ArgumentNullException(nameof(startup));
-            }
 
             if (serviceContext == null)
-            {
                 throw new ArgumentNullException(nameof(serviceContext));
-            }
 
             if (endpointName == null)
-            {
                 throw new ArgumentNullException(nameof(endpointName));
-            }
 
             if (eventSource == null)
-            {
                 throw new ArgumentNullException(nameof(eventSource));
-            }
 
-            this.startup = startup;
-            this.serviceContext = serviceContext;
-            this.endpointName = endpointName;
-            this.eventSource = eventSource;
-            this.appRoot = appRoot;
+            _startup = startup;
+            _serviceContext = serviceContext;
+            _endpointName = endpointName;
+            _eventSource = eventSource;
+            _appRoot = appRoot;
         }
+
+        #region
 
         public bool ListenOnSecondary { get; set; }
 
+        #endregion
+
         public Task<string> OpenAsync(CancellationToken cancellationToken)
         {
-            var serviceEndpoint = this.serviceContext.CodePackageActivationContext.GetEndpoint(this.endpointName);
-            int port = serviceEndpoint.Port;
+            var serviceEndpoint = _serviceContext.CodePackageActivationContext.GetEndpoint(_endpointName);
+            var port = serviceEndpoint.Port;
 
-            if (this.serviceContext is StatefulServiceContext)
+            if (_serviceContext is StatefulServiceContext)
             {
-                StatefulServiceContext statefulServiceContext = this.serviceContext as StatefulServiceContext;
+                var statefulServiceContext = _serviceContext as StatefulServiceContext;
 
-                this.listeningAddress = string.Format(
+                _listeningAddress = string.Format(
                     CultureInfo.InvariantCulture,
                     "http://+:{0}/{1}{2}/{3}/{4}",
                     port,
-                    string.IsNullOrWhiteSpace(this.appRoot)
+                    string.IsNullOrWhiteSpace(_appRoot)
                         ? string.Empty
-                        : this.appRoot.TrimEnd('/') + '/',
+                        : _appRoot.TrimEnd('/') + '/',
                     statefulServiceContext.PartitionId,
                     statefulServiceContext.ReplicaId,
                     Guid.NewGuid());
             }
-            else if (this.serviceContext is StatelessServiceContext)
+            else if (_serviceContext is StatelessServiceContext)
             {
-                this.listeningAddress = string.Format(
+                _listeningAddress = string.Format(
                     CultureInfo.InvariantCulture,
                     "http://+:{0}/{1}",
                     port,
-                    string.IsNullOrWhiteSpace(this.appRoot)
+                    string.IsNullOrWhiteSpace(_appRoot)
                         ? string.Empty
-                        : this.appRoot.TrimEnd('/') + '/');
+                        : _appRoot.TrimEnd('/') + '/');
             }
             else
             {
                 throw new InvalidOperationException();
             }
 
-            this.publishAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
+            _publishAddress = _listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
 
             try
             {
-                this.eventSource.ServiceMessage(this.serviceContext, "Starting web server on " + this.listeningAddress);
+                _eventSource.ServiceMessage(_serviceContext, "Starting web server on " + _listeningAddress);
 
-                this.webApp = WebApp.Start(this.listeningAddress, appBuilder => this.startup.Invoke(appBuilder));
+                _webApp = WebApp.Start(_listeningAddress, appBuilder => _startup.Invoke(appBuilder));
 
-                this.eventSource.ServiceMessage(this.serviceContext, "Listening on " + this.publishAddress);
+                _eventSource.ServiceMessage(_serviceContext, "Listening on " + _publishAddress);
 
-                return Task.FromResult(this.publishAddress);
+                return Task.FromResult(_publishAddress);
             }
             catch (Exception ex)
             {
-                this.eventSource.ServiceMessage(this.serviceContext, "Web server failed to open. " + ex.ToString());
+                _eventSource.ServiceMessage(_serviceContext, "Web server failed to open. " + ex);
 
-                this.StopWebServer();
+                StopWebServer();
 
                 throw;
             }
@@ -116,33 +120,31 @@ namespace SignalRHost
 
         public Task CloseAsync(CancellationToken cancellationToken)
         {
-            this.eventSource.ServiceMessage(this.serviceContext, "Closing web server");
+            _eventSource.ServiceMessage(_serviceContext, "Closing web server");
 
-            this.StopWebServer();
+            StopWebServer();
 
             return Task.FromResult(true);
         }
 
         public void Abort()
         {
-            this.eventSource.ServiceMessage(this.serviceContext, "Aborting web server");
+            _eventSource.ServiceMessage(_serviceContext, "Aborting web server");
 
-            this.StopWebServer();
+            StopWebServer();
         }
 
         private void StopWebServer()
         {
-            if (this.webApp != null)
-            {
+            if (_webApp != null)
                 try
                 {
-                    this.webApp.Dispose();
+                    _webApp.Dispose();
                 }
                 catch (ObjectDisposedException)
                 {
                     // no-op
                 }
-            }
         }
     }
 }

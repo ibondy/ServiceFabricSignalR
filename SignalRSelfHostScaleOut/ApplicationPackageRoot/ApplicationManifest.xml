@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="SignalRSelfHost" ApplicationTypeVersion="1.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
-    <Parameter Name="SignalRHost_InstanceCount" DefaultValue="-1" />
+    <Parameter Name="SignalRHost_InstanceCount" DefaultValue="1" />
     <Parameter Name="UseScaleout" DefaultValue="false" />
-    <Parameter Name="SFConnectionString" DefaultValue="" />
+    <Parameter Name="SFScaleoutConnectionString" DefaultValue="" />
+    <Parameter Name="UseActors" DefaultValue="False" />
   </Parameters>
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="SignalRHostPkg" ServiceManifestVersion="1.0.0" />
@@ -12,7 +13,8 @@
         <Settings>
           <Section Name="SignalRScaleout">
             <Parameter Name="UseScaleout" Value="[UseScaleout]" />
-            <Parameter Name="SFConnectionString" Value="[SFConnectionString]" />
+            <Parameter Name="SFScaleoutConnectionString" Value="[SFScaleoutConnectionString]" />
+            <Parameter Name="UseActors" Value="[UseActors]" />
           </Section>
         </Settings>
       </ConfigOverride>
@@ -22,6 +24,7 @@
     <Service Name="SignalRHost">
       <StatelessService ServiceTypeName="SignalRHostType" InstanceCount="[SignalRHost_InstanceCount]">
         <SingletonPartition />
+        <PlacementConstraints>(NodeType==Frontend)</PlacementConstraints>
       </StatelessService>
     </Service>
   </DefaultServices>

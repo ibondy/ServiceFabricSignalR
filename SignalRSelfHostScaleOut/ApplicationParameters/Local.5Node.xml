@@ -2,6 +2,7 @@
 <Application xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="fabric:/SignalRSelfHost" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
     <Parameter Name="SignalRHost_InstanceCount" Value="1" />
-    <Parameter Name="SFConnectionString" Value="fabric:/SFScaleOut/ScaleOut" />
+    <Parameter Name="SFScaleoutConnectionString" Value="fabric:/SFScaleOut/ScaleOut" />
+    <Parameter Name="UseActors" Value="true" />
   </Parameters>
 </Application>

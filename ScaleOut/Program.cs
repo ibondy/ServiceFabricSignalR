@@ -1,14 +1,18 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using Microsoft.ServiceFabric.Services.Runtime;
-
-namespace ScaleOut
+﻿namespace ScaleOut
 {
+    #region Using
+
+    using System;
+    using System.Diagnostics;
+    using System.Threading;
+    using Microsoft.ServiceFabric.Services.Runtime;
+
+    #endregion
+
     internal static class Program
     {
         /// <summary>
-        /// This is the entry point of the service host process.
+        ///     This is the entry point of the service host process.
         /// </summary>
         private static void Main()
         {
@@ -19,7 +23,7 @@ namespace ScaleOut
                 // When Service Fabric creates an instance of this service type,
                 // an instance of the class is created in this host process.
 
-                ServiceRuntime.RegisterServiceAsync("ScaleOutType",context => new ScaleOut(context)).GetAwaiter().GetResult();
+                ServiceRuntime.RegisterServiceAsync("ScaleOutType", context => new ScaleOut(context)).GetAwaiter().GetResult();
 
                 ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(ScaleOut).Name);
 

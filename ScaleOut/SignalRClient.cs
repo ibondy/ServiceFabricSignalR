@@ -1,37 +1,45 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNet.SignalR.Client;
-using System.Diagnostics;
-
-namespace ScaleOut
+﻿namespace ScaleOut
 {
+    #region Using
+
+    using System;
+    using System.Threading.Tasks;
+    using Microsoft.AspNet.SignalR.Client;
+
+    #endregion
+
     /// <summary>
-    /// Connects to SignalR hosts
+    ///     Connects to SignalR hosts
     /// </summary>
     public class SignalRClient
     {
-        public string HostId { get; }
+        #region
+
         private readonly string _endpoint;
         private Connection _connection;
-        public SignalRClient(string hostId,string endpoint)
+
+        #endregion
+
+        public SignalRClient(string hostId, string endpoint)
         {
             HostId = hostId;
             _endpoint = endpoint;
         }
 
+        #region
+
+        public string HostId { get; }
+
+        #endregion
+
         public async Task ConnectAsync()
         {
             if (string.IsNullOrEmpty(_endpoint))
-            {
                 throw new InvalidOperationException("Endpoint missing");
-            }
             if (_connection != null)
-            {
                 throw new InvalidStateException("Connection already exists");
-            }
 
             await OpenConnection();
-
         }
 
         private async Task OpenConnection()
@@ -52,34 +60,33 @@ namespace ScaleOut
                     await Task.Delay(1000);
                     x++;
                     if (x > 20)
-                    { break; }
+                        break;
                 }
-                
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                ServiceEventSource.Current.Message(ex.Message);
             }
 
-            Debug.WriteLine(_connection.State == ConnectionState.Connected ? $"Successfully connected to SignalR host at {_endpoint}" : "Unable to connect to SignalR host");
+            ServiceEventSource.Current.Message(_connection.State == ConnectionState.Connected
+                ? $"Successfully connected Scaleout client to SignalR host at {_endpoint}"
+                : "Unable to connect to SignalR host");
         }
 
         private void _connection_Received(string obj)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Outbound traffic only!");
         }
 
         public async Task SendAsync(string connectionId, string message)
         {
-          if(_connection.State == ConnectionState.Connected)
-            {
-                await _connection.Send(new ScaleOutMessage { ConnectionId = connectionId, Payload = message }).ConfigureAwait(false);
-            }  
+            if (_connection.State == ConnectionState.Connected)
+                await _connection.Send(new ScaleOutMessage {ConnectionId = connectionId, Payload = message}).ConfigureAwait(false);
         }
 
         public async Task SendAllAsync(string message)
         {
-            await _connection.Send(new ScaleOutMessage {Payload = message }).ConfigureAwait(false);
+            await _connection.Send(new ScaleOutMessage {Payload = message}).ConfigureAwait(false);
         }
     }
 }

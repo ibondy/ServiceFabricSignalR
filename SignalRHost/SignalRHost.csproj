@@ -12,6 +12,8 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <IsServiceFabricServiceProject>True</IsServiceFabricServiceProject>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -24,10 +26,8 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <IsServiceFabricServiceProject>True</IsServiceFabricServiceProject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
@@ -85,6 +85,10 @@
       <HintPath>..\packages\Microsoft.Owin.StaticFiles.3.0.1\lib\net45\Microsoft.Owin.StaticFiles.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.ServiceFabric.Actors, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.ServiceFabric.Actors.2.4.138\lib\net45\Microsoft.ServiceFabric.Actors.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.ServiceFabric.Data, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
       <HintPath>..\packages\Microsoft.ServiceFabric.Data.2.4.145\lib\net45\Microsoft.ServiceFabric.Data.dll</HintPath>
       <Private>True</Private>
@@ -116,6 +120,8 @@
       <HintPath>..\packages\Owin.Security.AesDataProtectorProvider.1.1.0.0\lib\net45\Owin.Security.AesDataProtectorProvider.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="ServiceFabricServiceModel, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
       <HintPath>..\packages\Microsoft.ServiceFabric.Services.2.4.145\lib\net45\ServiceFabricServiceModel.dll</HintPath>
       <Private>True</Private>
@@ -147,6 +153,7 @@
       <HintPath>..\packages\System.Web.Http.Common.4.0.20126.16343\lib\net40\System.Web.Http.Common.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Services" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InternalConnection.cs" />
@@ -156,7 +163,7 @@
     <Compile Include="SignalRHost.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ServiceEventSource.cs" />
-    <Compile Include="SignalRScaleoutConfiguration.cs" />
+    <Compile Include="SignalRHostConfiguration.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -182,10 +189,23 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EchoActor.Interfaces\EchoActor.Interfaces.csproj">
+      <Project>{674f72b4-1268-4bd3-802e-2bb2231a5942}</Project>
+      <Name>EchoActor.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EchoService\EchoService.csproj">
+      <Project>{11b3b741-14fd-4797-b19a-f6079eb6f4f7}</Project>
+      <Name>EchoService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ScaleOut\ScaleOut.csproj">
       <Project>{dc2a1494-b198-4a4c-abc4-4565d33d1c26}</Project>
       <Name>ScaleOut</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="wwwroot\index.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

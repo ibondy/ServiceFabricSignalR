@@ -1,157 +1,156 @@
 ﻿namespace ScaleOut
 {
-    using Enumerable = System.Linq.Enumerable;
-    using ServiceRemotingExtensions = Microsoft.ServiceFabric.Services.Remoting.Runtime.ServiceRemotingExtensions;
+    #region Using
+
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Fabric;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.ServiceFabric.Data.Collections;
+    using Microsoft.ServiceFabric.Data.Notifications;
+    using Microsoft.ServiceFabric.Services.Communication.Runtime;
+    using Microsoft.ServiceFabric.Services.Remoting;
+    using Microsoft.ServiceFabric.Services.Remoting.Runtime;
+    using Microsoft.ServiceFabric.Services.Runtime;
+
+    #endregion
 
     /// <summary>
     ///     SignalR scaleout using Reliable Dictionary
     /// </summary>
-    public interface IScaleOut : Microsoft.ServiceFabric.Services.Remoting.IService
+    public interface IScaleOut : IService
     {
-        System.Threading.Tasks.Task SetConnectionAsync(string key, string value);
-        System.Threading.Tasks.Task<string> GetConnectionAsync(string key);
-        System.Threading.Tasks.Task RemoveConnectionAsync(string value);
-        System.Threading.Tasks.Task<long> GetConnectionCount();
+        Task SetConnectionAsync(string key, string value);
+        Task<string> GetConnectionAsync(string key);
+        Task RemoveConnectionAsync(string value);
+        Task<long> GetConnectionCount();
 
-        System.Threading.Tasks.Task RegisterSignalRHost(string hostName, string endpoint);
+        Task RegisterSignalRHost(string hostName, string endpoint);
 
-        System.Threading.Tasks.Task UnregisterSignalRHost(string hostName);
-
-        /// <summary>
-        ///     Pulls messages from Scaleout
-        /// </summary>
-        /// <param name="batchCount"></param>
-        /// <returns></returns>
-        System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<string>> GetMessages(int batchCount);
+        Task UnregisterSignalRHost(string hostName);
     }
 
     /// <summary>
     ///     Handles all messages from Sevice Fabric destined for SignalR clients
     /// </summary>
-    public interface IMessageRouter : Microsoft.ServiceFabric.Services.Remoting.IService
+    public interface IMessageRouter : IService
     {
-        System.Threading.Tasks.Task SendAsync(string hostId, string connectionId, string message);
-        System.Threading.Tasks.Task BroadcastAsync(string message);
+        Task SendAsync(string hostId, string connectionId, string message);
+        Task BroadcastAsync(string message);
     }
 
     /// <summary>
     ///     Handles SignalR scaleout using Reliable Dictionary
     ///     An instance of this class is created for each service replica by the Service Fabric runtime.
     /// </summary>
-    internal sealed class ScaleOut : Microsoft.ServiceFabric.Services.Runtime.StatefulService, IScaleOut, IMessageRouter
+    internal sealed class ScaleOut : StatefulService, IScaleOut, IMessageRouter
     {
-        #region
-
-        private static readonly string _allowedCharacters = "abcdefghjklmnpqrstvxz0123456789";
-
-        private readonly System.Collections.Generic.List<string> _myQueueList = new System.Collections.Generic.List<string>();
-
-        #endregion
-
-        public ScaleOut(System.Fabric.StatefulServiceContext context) : base(context)
+        public ScaleOut(StatefulServiceContext context) : base(context)
         {
-            MyClients = new System.Collections.Generic.Dictionary<string, SignalRClient>();
+            MyClients = new Dictionary<string, SignalRClient>();
         }
 
         #region
 
-        private Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string> MyHosts { get; set; }
+        private IReliableDictionary<string, string> MyHosts { get; set; }
 
-        private System.Collections.Generic.IDictionary<string, SignalRClient> MyClients { get; }
+        private IDictionary<string, SignalRClient> MyClients { get; }
 
         #endregion
 
-        public async System.Threading.Tasks.Task SendAsync(string hostId, string connectionId, string message)
+        public async Task SendAsync(string hostId, string connectionId, string message)
         {
-            await Enumerable.First(MyClients, p => p.Key == hostId).Value.SendAsync(connectionId, message).ConfigureAwait(false);
+            await MyClients.First(p => p.Key == hostId).Value.SendAsync(connectionId, message).ConfigureAwait(false);
         }
 
-        public async System.Threading.Tasks.Task BroadcastAsync(string message)
+        public async Task BroadcastAsync(string message)
         {
             foreach (var client in MyClients)
                 await client.Value.SendAllAsync(message).ConfigureAwait(false);
         }
 
-        public async System.Threading.Tasks.Task<string> GetConnectionAsync(string key)
+        public async Task<string> GetConnectionAsync(string key)
         {
             using (var tx = StateManager.CreateTransaction())
             {
-                var myDictionary = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myDictionary").ConfigureAwait(false);
-                var result = await myDictionary.TryGetValueAsync(tx, key).ConfigureAwait(false);
+                var myConnections = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myConnections").ConfigureAwait(false);
+                var result = await myConnections.TryGetValueAsync(tx, key).ConfigureAwait(false);
                 return result.Value;
             }
         }
 
-        public async System.Threading.Tasks.Task<long> GetConnectionCount()
+        public async Task<long> GetConnectionCount()
         {
             using (var tx = StateManager.CreateTransaction())
             {
-                var myDictionary = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myDictionary").ConfigureAwait(false);
-                var result = await myDictionary.GetCountAsync(tx).ConfigureAwait(false);
+                var myConnections = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myConnections").ConfigureAwait(false);
+                var result = await myConnections.GetCountAsync(tx).ConfigureAwait(false);
                 return result;
             }
         }
 
-        public async System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<string>> GetMessages(int batchCount)
+        //public async System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<string>> GetMessages(int batchCount)
+        //{
+        //    using (var tx = StateManager.CreateTransaction())
+        //    {
+        //        var myQueue = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableQueue<string>>("myQueue").ConfigureAwait(false);
+        //        var count = await myQueue.GetCountAsync(tx).ConfigureAwait(false);
+        //        var mylist = new System.Collections.Generic.List<string>();
+        //        for (var i = batchCount - 1; i >= 0; i--)
+        //        {
+        //            var msg = await myQueue.TryDequeueAsync(tx).ConfigureAwait(false);
+        //            if (string.IsNullOrEmpty(msg.Value))
+        //                break;
+        //            mylist.Add(msg.Value);
+        //        }
+
+        //        await tx.CommitAsync().ConfigureAwait(false);
+        //        return mylist.ToArray();
+        //    }
+        //}
+
+        public async Task RemoveConnectionAsync(string key)
         {
             using (var tx = StateManager.CreateTransaction())
             {
-                var myQueue = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableQueue<string>>("myQueue").ConfigureAwait(false);
-                var count = await myQueue.GetCountAsync(tx).ConfigureAwait(false);
-                var mylist = new System.Collections.Generic.List<string>();
-                for (var i = batchCount - 1; i >= 0; i--)
-                {
-                    var msg = await myQueue.TryDequeueAsync(tx).ConfigureAwait(false);
-                    if (string.IsNullOrEmpty(msg.Value))
-                        break;
-                    mylist.Add(msg.Value);
-                }
-
-                await tx.CommitAsync().ConfigureAwait(false);
-                return mylist.ToArray();
-            }
-        }
-
-        public async System.Threading.Tasks.Task RemoveConnectionAsync(string key)
-        {
-            using (var tx = StateManager.CreateTransaction())
-            {
-                var myDictionary = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myDictionary").ConfigureAwait(false);
-                await myDictionary.TryRemoveAsync(tx, key).ConfigureAwait(false);
+                var myConnections = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myConnections").ConfigureAwait(false);
+                await myConnections.TryRemoveAsync(tx, key).ConfigureAwait(false);
                 await tx.CommitAsync().ConfigureAwait(false);
             }
 
             using (var tx = StateManager.CreateTransaction())
             {
-                var myDictionary = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myDictionary").ConfigureAwait(false);
-                System.Diagnostics.Debug.WriteLine(await myDictionary.GetCountAsync(tx));
-                await tx.CommitAsync().ConfigureAwait(false);
-            }
-        }
-
-        public async System.Threading.Tasks.Task SetConnectionAsync(string key, string value)
-        {
-            using (var tx = StateManager.CreateTransaction())
-            {
-                var myDictionary = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myDictionary").ConfigureAwait(false);
-                await myDictionary.AddOrUpdateAsync(tx, key, value, (k, v) => value).ConfigureAwait(false);
-                await tx.CommitAsync().ConfigureAwait(false);
-            }
-
-            using (var tx = StateManager.CreateTransaction())
-            {
-                var myDictionary = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myDictionary");
-                System.Diagnostics.Debug.WriteLine(await myDictionary.GetCountAsync(tx));
+                var myConnections = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myConnections").ConfigureAwait(false);
+                Debug.WriteLine(await myConnections.GetCountAsync(tx));
                 await tx.CommitAsync().ConfigureAwait(false);
             }
         }
 
-        public async System.Threading.Tasks.Task RegisterSignalRHost(string hostId, string endpoint)
+        public async Task SetConnectionAsync(string key, string value)
+        {
+            using (var tx = StateManager.CreateTransaction())
+            {
+                var myConnections = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myConnections").ConfigureAwait(false);
+                await myConnections.AddOrUpdateAsync(tx, key, value, (k, v) => value).ConfigureAwait(false);
+                await tx.CommitAsync().ConfigureAwait(false);
+            }
+
+            using (var tx = StateManager.CreateTransaction())
+            {
+                var myConnections = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myConnections");
+                Debug.WriteLine(await myConnections.GetCountAsync(tx));
+                await tx.CommitAsync().ConfigureAwait(false);
+            }
+        }
+
+        public async Task RegisterSignalRHost(string hostId, string endpoint)
         {
             using (var tx = StateManager.CreateTransaction())
             {
                 if (MyHosts == null)
-                    MyHosts = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myHosts").ConfigureAwait(false);
+                    MyHosts = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myHosts").ConfigureAwait(false);
 
                 await MyHosts.AddOrUpdateAsync(tx, hostId, endpoint, (k, v) => endpoint).ConfigureAwait(false);
                 await tx.CommitAsync().ConfigureAwait(false);
@@ -165,7 +164,7 @@
             }
         }
 
-        public async System.Threading.Tasks.Task UnregisterSignalRHost(string hostName)
+        public async Task UnregisterSignalRHost(string hostName)
         {
             using (var tx = StateManager.CreateTransaction())
             {
@@ -182,12 +181,11 @@
         ///     For more information on service communication, see https://aka.ms/servicefabricservicecommunication
         /// </remarks>
         /// <returns>A collection of listeners.</returns>
-        protected override System.Collections.Generic.IEnumerable<Microsoft.ServiceFabric.Services.Communication.Runtime.ServiceReplicaListener> CreateServiceReplicaListeners()
+        protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
             return new[]
             {
-                new Microsoft.ServiceFabric.Services.Communication.Runtime.ServiceReplicaListener(
-                    context => ServiceRemotingExtensions.CreateServiceRemotingListener(this, context), "", false)
+                new ServiceReplicaListener(this.CreateServiceRemotingListener)
             };
         }
 
@@ -196,47 +194,30 @@
         ///     This method executes when this replica of your service becomes primary and has write status.
         /// </summary>
         /// <param name="cancellationToken">Canceled when Service Fabric needs to shut down this service replica.</param>
-        protected override async System.Threading.Tasks.Task RunAsync(System.Threading.CancellationToken cancellationToken)
+        protected override async Task RunAsync(CancellationToken cancellationToken)
         {
-            // TODO: Replace the following sample code with your own logic 
-            //       or remove this RunAsync override if it's not needed in your service.
-
-            var myDictionary = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myDictionary").ConfigureAwait(false);
-            var myQueue = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableQueue<string>>("myQueue").ConfigureAwait(false);
-            MyHosts = await StateManager.GetOrAddAsync<Microsoft.ServiceFabric.Data.Collections.IReliableDictionary<string, string>>("myHosts").ConfigureAwait(false);
+            await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myConnections").ConfigureAwait(false);
+            MyHosts = await StateManager.GetOrAddAsync<IReliableDictionary<string, string>>("myHosts").ConfigureAwait(false);
             MyHosts.DictionaryChanged += MyHosts_DictionaryChanged;
 
-            //TODO load clients and connect
-
-            //Generate random queue values
-
-            var messages = string.Empty;
-            var length = 105;
+            //load existing host clients and connect
             using (var tx = StateManager.CreateTransaction())
             {
-                for (var i = length - 1; i >= 0; i--)
+                var e = await MyHosts.CreateEnumerableAsync(tx, EnumerationMode.Unordered);
+                using (var hosts = e.GetAsyncEnumerator())
                 {
-                    var item = GenerateString(8);
-                    await myQueue.EnqueueAsync(tx, item).ConfigureAwait(false);
-                    _myQueueList.Add(item);
+                    while (await hosts.MoveNextAsync(cancellationToken))
+                    {
+                        var host = new SignalRClient(hosts.Current.Key, hosts.Current.Value);
+                        await host.ConnectAsync().ConfigureAwait(false);
+                        MyClients.Add(hosts.Current.Key, host);
+                        ServiceEventSource.Current.Message($"Registered and connected to host {host.HostId}");
+                    }
                 }
-                await tx.CommitAsync();
             }
         }
 
-        private string GenerateString(int numberOfCharacters)
-        {
-            const int from = 0;
-            var to = _allowedCharacters.Length;
-            var r = new System.Random(System.DateTime.Now.Millisecond);
-
-            var qs = new System.Text.StringBuilder();
-            for (var i = 0; i < numberOfCharacters; i++)
-                qs.Append(_allowedCharacters.Substring(r.Next(from, to), 1));
-            return qs.ToString();
-        }
-
-        private void MyHosts_DictionaryChanged(object sender, Microsoft.ServiceFabric.Data.Notifications.NotifyDictionaryChangedEventArgs<string, string> e)
+        private void MyHosts_DictionaryChanged(object sender, NotifyDictionaryChangedEventArgs<string, string> e)
         {
             //TODO update hosts
         }

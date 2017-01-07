@@ -16,6 +16,6 @@
                                     StoreName="My" />
 
   -->
-  <ClusterConnectionParameters ConnectionEndpoint="[your cluster address here]" />
+  <ClusterConnectionParameters ConnectionEndpoint="mmcgf.westus2.cloudapp.azure.com:19000" />
   <ApplicationParameterFile Path="..\ApplicationParameters\Cloud.xml" />
 </PublishProfile>

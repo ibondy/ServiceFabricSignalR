@@ -21,6 +21,7 @@
     <Service Name="ScaleOut">
       <StatefulService ServiceTypeName="ScaleOutType" TargetReplicaSetSize="[ScaleOut_TargetReplicaSetSize]" MinReplicaSetSize="[ScaleOut_MinReplicaSetSize]">
         <UniformInt64Partition PartitionCount="[ScaleOut_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+        <PlacementConstraints>(NodeType==Backend)</PlacementConstraints>
       </StatefulService>
     </Service>
   </DefaultServices>

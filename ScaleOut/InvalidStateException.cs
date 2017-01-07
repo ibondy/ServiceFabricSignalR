@@ -1,8 +1,12 @@
-﻿using System;
-using System.Runtime.Serialization;
-
-namespace ScaleOut
+﻿namespace ScaleOut
 {
+    #region Using
+
+    using System;
+    using System.Runtime.Serialization;
+
+    #endregion
+
     [Serializable]
     internal class InvalidStateException : Exception
     {

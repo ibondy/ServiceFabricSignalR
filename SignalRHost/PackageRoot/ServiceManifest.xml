@@ -7,7 +7,9 @@
   <ServiceTypes>
     <!-- This is the name of your ServiceType. 
          This name must match the string used in RegisterServiceType call in Program.cs. -->
-    <StatelessServiceType ServiceTypeName="SignalRHostType" />
+    <StatelessServiceType ServiceTypeName="SignalRHostType" >
+      
+    </StatelessServiceType>
   </ServiceTypes>
 
   <!-- Code package is your service executable. -->

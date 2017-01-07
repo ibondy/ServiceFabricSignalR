@@ -1,14 +1,18 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using Microsoft.ServiceFabric.Services.Runtime;
-
-namespace SignalRHost
+﻿namespace SignalRHost
 {
+    #region Using
+
+    using System;
+    using System.Diagnostics;
+    using System.Threading;
+    using Microsoft.ServiceFabric.Services.Runtime;
+
+    #endregion
+
     internal static class Program
     {
         /// <summary>
-        /// This is the entry point of the service host process.
+        ///     This is the entry point of the service host process.
         /// </summary>
         private static void Main()
         {
